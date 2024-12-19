@@ -51,4 +51,47 @@ const addToCart = async (req, res) => {
     }
 };
 
-module.exports = { addToCart };
+
+
+const checkout = async (req, res) => {
+  try {
+    // Find the cart (modify query if you have user-specific carts)
+    const cart = await cartModel.findOne(); // Include userId in the query if necessary
+    if (!cart || cart.items.length === 0) {
+      return res.status(400).json({ message: 'Cart is empty or not found' });
+    }
+
+    // Validate cart total price
+    const calculatedTotalPrice = cart.items.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+
+   
+
+    // Perform checkout (logic like processing payment could go here)
+    console.log('Processing payment for total:', cart.totalPrice);
+
+    // Clear the cart after successful checkout
+    cart.items = [];
+    cart.totalItems = 0;
+    cart.totalPrice = 0;
+    cart.updatedAt = new Date(); // Update timestamp
+
+    await cart.save();
+
+    res.status(200).json({
+      message: 'Checkout successful',
+      checkoutDetails: {
+        totalItems: 0,
+        totalPrice: 0,
+        status: 'Processed',
+      },
+    });
+  } catch (error) {
+    console.error('Checkout Error:', error);
+    res.status(500).json({ message: 'Internal server error', error: error.message });
+  }
+};
+
+module.exports = {checkout, addToCart};
